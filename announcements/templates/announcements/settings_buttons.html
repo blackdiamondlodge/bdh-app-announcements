@@ -37,14 +37,16 @@
     .an-add[hidden] { display: none; }
     .an-chime { color: var(--mut); font-size: 14px; display: flex; align-items: center; gap: 10px; margin: -4px 0 14px; }
     .an-chime button { padding: 4px 10px; }
+    .an-back { display: inline-flex; align-items: center; gap: 6px; margin-bottom: 6px; color: var(--mut); font-size: 14px; text-decoration: none; }
+    .an-back:hover { color: var(--acc2); }
 </style>
 
 <div class="hst-head">
     <div>
+        <a class="an-back" href="{% url 'hub_settings_app' 'announcements' %}"><span aria-hidden="true">‹</span> Announcements</a>
         <h2>Announcement buttons</h2>
         <p>Each button is a quick action on the homepage. Tapping it plays the chime, then says the message.</p>
     </div>
-    <div class="act"><a class="hst-btn ghost" style="display:flex;align-items:center;text-decoration:none" href="{% url 'hub_settings_app' 'announcements' %}">‹ Announcements settings</a></div>
 </div>
 
 <div class="an-chime">
