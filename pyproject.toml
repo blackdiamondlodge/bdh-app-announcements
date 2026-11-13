@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "bdh-app-announcements"
-version = "1.0.0"
+version = "1.0.1"
 description = "Black Diamond Hub app: one-tap spoken announcements on Sonos and Alexa speakers"
 readme = "README.md"
 license = { text = "MIT" }
