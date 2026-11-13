@@ -1,0 +1,105 @@
+{% extends 'hub_settings/_layout.html' %}
+
+{% block title %}Announcement buttons · Settings{% endblock %}
+
+{% block section %}
+<style>
+    .an-icons { display: flex; gap: 6px; flex-wrap: wrap; justify-content: flex-end; }
+    .an-icons label { position: relative; cursor: pointer; }
+    .an-icons input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+    .an-icons span { display: inline-flex; width: 38px; height: 38px; align-items: center; justify-content: center; border-radius: 10px; border: 1px solid var(--line); color: var(--mut); font-size: 16px; }
+    .an-icons input:checked + span { color: #eef3fa; border-color: var(--acc2); background: rgba(90, 160, 230, .18); }
+    .an-icons input:focus-visible + span { outline: 2px solid var(--acc2); outline-offset: 2px; }
+    .an-msg { width: 100%; resize: vertical; font: inherit; min-height: 64px; }
+    .an-seg { display: inline-flex; border: 1px solid var(--line); border-radius: 10px; overflow: hidden; }
+    .an-seg label { position: relative; cursor: pointer; }
+    .an-seg input { position: absolute; opacity: 0; inset: 0; margin: 0; cursor: pointer; }
+    .an-seg span { display: block; padding: 8px 14px; color: var(--mut); font-size: 14px; }
+    .an-seg input:checked + span { background: rgba(90, 160, 230, .18); color: #eef3fa; }
+    .an-picks[hidden] { display: none; }
+    .an-act { display: flex; gap: 10px; padding: 14px 22px; justify-content: flex-end; }
+    .an-act .del { margin-right: auto; color: var(--red); }
+    .an-btn { margin-bottom: 10px; }
+    .an-btn > summary { list-style: none; display: flex; align-items: center; gap: 14px; padding: 14px 22px; cursor: pointer; user-select: none; }
+    .an-btn > summary::-webkit-details-marker { display: none; }
+    .an-btn > summary .ic { width: 36px; height: 36px; border-radius: 10px; display: inline-flex; align-items: center; justify-content: center; background: rgba(90, 160, 230, .16); color: #cfe4fa; flex: none; }
+    .an-btn > summary .tx { flex: 1; min-width: 0; }
+    .an-btn > summary .nm { font-size: 16px; font-weight: 500; }
+    .an-btn > summary .say { color: var(--mut); font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+    .an-btn > summary .st { color: var(--mut); font-size: 13px; white-space: nowrap; }
+    .an-btn > summary .chev { color: var(--mut); font-size: 18px; transition: transform .15s; }
+    .an-btn[open] > summary { border-bottom: 1px solid var(--line); }
+    .an-btn[open] > summary .chev { transform: rotate(90deg); }
+    .an-mv { display: flex; flex-direction: column; gap: 2px; }
+    .an-mv button { background: none; border: 0; color: var(--mut); cursor: pointer; padding: 0 4px; font-size: 12px; line-height: 1.2; }
+    .an-mv button:disabled { opacity: .25; cursor: default; }
+    .an-addbtn { width: 100%; margin: 8px 0 18px; }
+    .an-add[hidden] { display: none; }
+    .an-chime { color: var(--mut); font-size: 14px; display: flex; align-items: center; gap: 10px; margin: -4px 0 14px; }
+    .an-chime button { padding: 4px 10px; }
+</style>
+
+<div class="hst-head">
+    <div>
+        <h2>Announcement buttons</h2>
+        <p>Each button is a quick action on the homepage. Tapping it plays the chime, then says the message.</p>
+    </div>
+    <div class="act"><a class="hst-btn ghost" style="display:flex;align-items:center;text-decoration:none" href="{% url 'hub_settings_app' 'announcements' %}">‹ Announcements settings</a></div>
+</div>
+
+<div class="an-chime">
+    {% if chime %}Chime: <b>{{ chime|capfirst }}</b>
+    <button type="button" class="hst-btn ghost" id="an-chime" data-chime="{{ chime }}">▶ Preview</button>
+    {% else %}No chime. Pick one in Announcements settings.{% endif %}
+</div>
+
+{% if note %}<div class="hst-note {{ note.0 }}">{{ note.1 }}</div>{% endif %}
+
+{% for b in buttons %}
+<details class="hst-card an-btn"{% if b.id == open_id %} open{% endif %}>
+<summary>
+    <form method="post" class="an-mv">
+        {% csrf_token %}<input type="hidden" name="id" value="{{ b.id }}">
+        <button name="action" value="up" aria-label="Move {{ b.title }} up"{% if forloop.first %} disabled{% endif %}>▲</button>
+        <button name="action" value="down" aria-label="Move {{ b.title }} down"{% if forloop.last %} disabled{% endif %}>▼</button>
+    </form>
+    <span class="ic"><i class="fa-solid fa-{{ b.icon }}"></i></span>
+    <span class="tx"><span class="nm">{{ b.title }}</span><div class="say">“{{ b.message }}”</div></span>
+    <span class="st">{{ b.where }}</span>
+    <span class="chev" aria-hidden="true">›</span>
+</summary>
+{% include "announcements/_button_form.html" with b=b add=False %}
+</details>
+{% empty %}
+<div class="hst-card"><div class="hst-row"><span class="hst-none">No buttons yet. Add one, e.g. “Dinner”.</span></div></div>
+{% endfor %}
+
+{% if can_add %}
+<button type="button" class="hst-btn ghost an-addbtn" id="an-addbtn"{% if add_open %} hidden{% endif %}>+ Add button</button>
+{% include "announcements/_button_form.html" with b=draft add=True %}
+{% endif %}
+
+<script>
+(function () {
+    document.querySelectorAll('.an-where').forEach(function (row) {
+        var picks = row.querySelector('.an-picks');
+        row.querySelectorAll('input[name=play_on]').forEach(function (r) {
+            r.addEventListener('change', function () { picks.hidden = r.value !== 'pick' || !r.checked; });
+        });
+    });
+    var chime = document.getElementById('an-chime');
+    if (chime) chime.addEventListener('click', function () {
+        if (window.BDHChimes) window.BDHChimes.play(chime.dataset.chime);
+    });
+    var btn = document.getElementById('an-addbtn'), form = document.getElementById('an-add');
+    if (!btn || !form) return;
+    btn.addEventListener('click', function () {
+        btn.hidden = true; form.hidden = false;
+        form.scrollIntoView({ block: 'start', behavior: 'smooth' });
+    });
+    document.getElementById('an-addcancel').addEventListener('click', function () {
+        form.reset(); form.hidden = true; btn.hidden = false;
+    });
+})();
+</script>
+{% endblock %}
