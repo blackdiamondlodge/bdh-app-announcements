@@ -1,0 +1,41 @@
+<form method="post"{% if add %} class="hst-card an-add" id="an-add"{% if not add_open %} hidden{% endif %}{% endif %}>
+    {% csrf_token %}
+    {% if add %}<h3>Add a button</h3>{% else %}<input type="hidden" name="id" value="{{ b.id }}">{% endif %}
+    <div class="hst-row">
+        <div class="lbl"><b>Name</b><small>Shown on the quick action.</small></div>
+        <div class="ctl"><input class="hst-in txt" name="title" value="{{ b.title|default:'' }}" maxlength="40" placeholder="e.g. Dinner" required></div>
+    </div>
+    <div class="hst-row">
+        <div class="lbl"><b>Icon</b></div>
+        <div class="ctl an-icons">
+            {% for i in icons %}<label title="{{ i }}"><input type="radio" name="icon" value="{{ i }}"{% if i == b.icon %} checked{% endif %} aria-label="{{ i }}"><span><i class="fa-solid fa-{{ i }}"></i></span></label>{% endfor %}
+        </div>
+    </div>
+    <div class="hst-row" style="flex-wrap:wrap">
+        <div class="lbl" style="flex-basis:100%"><b>What to say</b></div>
+        <textarea class="hst-in an-msg" name="message" maxlength="300" rows="2" placeholder="e.g. Dinner's ready! Come on up." required>{{ b.message|default:'' }}</textarea>
+    </div>
+    <div class="hst-row multi an-where">
+        <div class="lbl"><b>Play on</b></div>
+        <div class="an-seg">
+            <label><input type="radio" name="play_on" value="all"{% if b.play_on != 'pick' %} checked{% endif %}><span>All speakers{% if all_count %} ({{ all_count }}){% endif %}</span></label>
+            <label><input type="radio" name="play_on" value="pick"{% if b.play_on == 'pick' %} checked{% endif %}><span>Choose…</span></label>
+        </div>
+        <div class="hst-picks an-picks"{% if b.play_on != 'pick' %} hidden{% endif %}>
+            {% for id, name in speakers %}
+            <label class="hst-pick"><input type="checkbox" name="speakers" value="{{ id }}"{% if id in b.chosen %} checked{% endif %}>{{ name }}</label>
+            {% empty %}<span class="hst-none">{{ speakers_error|default:"No Sonos or Alexa speakers found." }}</span>
+            {% endfor %}
+        </div>
+    </div>
+    <div class="an-act">
+        {% if add %}
+        <button type="button" class="hst-btn ghost" id="an-addcancel">Cancel</button>
+        <button class="hst-btn" name="action" value="add">Add button</button>
+        {% else %}
+        <button class="hst-btn ghost del" name="action" value="delete" formnovalidate onclick="return confirm('Remove {{ b.title|escapejs }}?')">Remove</button>
+        <button class="hst-btn ghost" name="action" value="test" formnovalidate title="Plays it on the speakers now">▶ Test</button>
+        <button class="hst-btn" name="action" value="save">Save</button>
+        {% endif %}
+    </div>
+</form>
